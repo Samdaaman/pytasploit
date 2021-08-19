@@ -2,6 +2,7 @@ FROM ubuntu
 
 RUN apt update && apt install -y \
     curl \
+    gcc \
     net-tools \
     netcat \
     python3

