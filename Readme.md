@@ -3,6 +3,10 @@
 `pinliner pyterpreter -o pyterpreter.py`
 
 
+pip install git+https://github.com/calebstewart/pwncat.git@v0.3.1
+pip install git+https://github.com/calebstewart/paramiko
+
+
 ### Pwncat mods
 /remote/victim.py
 line 356

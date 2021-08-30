@@ -1,5 +1,4 @@
 import subprocess
-from typing import Literal
 import urllib.request
 
 from pyterpreter import config
