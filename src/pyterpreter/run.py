@@ -35,4 +35,4 @@ def run():
 
         pacemaker.start()
         communication.initialise()
-        message_processor.process_messages_forever(communication.messages_received)
+        message_processor.process_messages_forever()

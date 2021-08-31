@@ -8,7 +8,7 @@ import subprocess
 import socket
 from threading import Lock
 from time import sleep
-from typing import Callable, List, Optional, Tuple
+from typing import Callable, Optional, Tuple
 
 from core.message import Message, MESSAGE_PURPOSE
 
@@ -138,24 +138,20 @@ class App:
     def _do_stealth(self):
         self.selected_instance.messages_to_send.put(Message(MESSAGE_PURPOSE.STEALTH))
 
-    def _on_instances_update(self, instances: Tuple[Instance], new_instance: Optional[Instance] = None):
+    def _on_instances_update(self, instances: Tuple[Instance], new_or_deleted_instance: Optional[Instance] = None):
+        if new_or_deleted_instance is not None:
+            if len(self._instances) > len(instances):
+                logger.warn(f'Unresponsive instance removed: {new_or_deleted_instance}')
+            else:
+                self.selected_instance = new_or_deleted_instance
+                logger.info(f'New instance connected: {new_or_deleted_instance}')
+
         self._instances = instances
 
         if self.selected_instance not in instances:
             self.selected_instance = None
         if self.selected_instance is None and len(instances) > 0:
             self.selected_instance = instances[0]
-
-        if new_instance is not None:
-            self.selected_instance = new_instance
-            logger.info(f'New instance connected: {new_instance}')
-            # self._do_open_shell_bash()
-
-        else:
-            if self.selected_instance not in instances:
-                self.selected_instance = None
-            if self.selected_instance is None and len(instances) > 0:
-                self.selected_instance = instances[0]
 
     def _list_instances(self):
         for instance in self._instances:

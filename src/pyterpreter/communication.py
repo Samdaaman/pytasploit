@@ -8,8 +8,8 @@ from core.message import Message
 
 from pyterpreter import config
 
-_messages_to_send: 'SimpleQueue[Message]' = SimpleQueue()
-messages_received: 'SimpleQueue[Message]' = SimpleQueue()
+config.messages_to_send = SimpleQueue()
+config.messages_received = SimpleQueue()
 
 _base_url = f'http://{config.LOCAL_IP}:{config.WEBSERVER_PORT}'
 
@@ -36,12 +36,12 @@ def initialise():
             else:
                 data = poll_messages.read().decode()
                 if len(data) > 0:
-                    messages_received.put(Message.from_string(data))
+                    config.messages_received.put(Message.from_string(data))
 
     def send_messages_forever():
         while True:
-            message = _messages_to_send.get()
-            urllib.request.urlopen(f'{_base_url}/instances/{config.INSTANCE_ID}', message.to_string().encode())
+            message = config.messages_to_send.get()
+            urllib.request.urlopen(urllib.request.Request(f'{_base_url}/instances/{config.INSTANCE_ID}', message.to_string().encode(), {'Content-Type': 'text/plain'}))
 
     create_instance()
     Thread(target=receive_messages_forever, daemon=True).start()

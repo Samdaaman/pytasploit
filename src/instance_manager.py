@@ -1,6 +1,7 @@
-from threading import Lock
 import random
 import string
+from threading import Lock, Thread
+import time
 from typing import Callable, List, Optional, Tuple
 
 from core.message import Message, MESSAGE_PURPOSE
@@ -29,6 +30,24 @@ def get_by_id(instance_id: str) -> Optional[Instance]:
         for instance in _instances:
             if instance.instance_id == instance_id:
                 return instance
+
+
+def ping_instances_forever(blocking=False):
+    ping_delay = 3
+
+    if not blocking:
+        return Thread(target=ping_instances_forever, args=[True], daemon=True).start()
+
+    while True:
+        with _lock:
+            for instance in _instances.copy():
+                if instance.last_message_received < time.perf_counter() - 3 * ping_delay:
+                    _instances.remove(instance)
+                    on_instances_update(tuple(_instances), instance)
+                else:
+                    instance.messages_to_send.put(Message(MESSAGE_PURPOSE.PING))
+
+        time.sleep(ping_delay)
 
 #
 # def get_all() -> List[Instance]:

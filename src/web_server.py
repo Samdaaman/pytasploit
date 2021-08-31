@@ -61,21 +61,20 @@ def create_instance():
     return instance.instance_id
 
 
-@app.route('/instances/<instance_id>')
+@app.route('/instances/<instance_id>', methods=['GET', 'POST'])
 def messaging(instance_id):
     instance = instance_manager.get_by_id(instance_id)
     if instance is None:
         return 'Not Found', 404
     if request.method == 'POST':
         message = Message.from_string(request.data.decode())
-        instance.messages_received.put(message)
+        instance.messages_received_put(message)
         return ''
     else:
         messages = []
         try:
             message = instance.messages_to_send.get_nowait()
             messages.append(message)
-            # print(f'Sending message {message}')
         except Empty:
             pass
         return '\n'.join([message.to_string() for message in messages])

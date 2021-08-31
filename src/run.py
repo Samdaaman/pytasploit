@@ -1,5 +1,6 @@
 import netifaces
 
+import instance_manager
 import message_processor
 import web_server
 import terminal
@@ -10,7 +11,8 @@ except ValueError:
     pass  # tun0 not found, keep localhost
 
 message_processor.process_new_messages_forever()
-web_server.start(False)
+instance_manager.ping_instances_forever()
+web_server.start()
 
-print(f'{"-" * 30}\ncurl -L {web_server.LOCAL_IP}:{web_server.PORT}|sh\n{"-" * 30}\n')
+print(f'{"-" * 30}\ncurl {web_server.LOCAL_IP}:{web_server.PORT}|python3\n{"-" * 30}\n')
 terminal.App()
