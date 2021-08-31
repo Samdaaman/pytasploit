@@ -17,7 +17,7 @@ _base_url = f'http://{config.LOCAL_IP}:{config.WEBSERVER_PORT}'
 def initialise():
     def receive_messages_forever():
         while True:
-            time.sleep(3)
+            time.sleep(1)
             try:
                 poll_messages = urllib.request.urlopen(f'{_base_url}/instances/{config.INSTANCE_ID}')
 
@@ -46,7 +46,7 @@ def initialise():
     create_instance()
     Thread(target=receive_messages_forever, daemon=True).start()
     Thread(target=send_messages_forever, daemon=True).start()
-    print('comms initialised')
+    print('Communication initialised')
 
 
 def create_instance():

