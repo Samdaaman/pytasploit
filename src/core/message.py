@@ -5,7 +5,7 @@ import string
 
 
 class MESSAGE_PURPOSE:
-    PING, OPEN_SHELL, RUN_SCRIPT, STEALTH = [str(i) for i in range(4)]
+    PING, OPEN_SHELL, RUN_SCRIPT, STEALTH, SELF_DESTRUCT = [str(i) for i in range(5)]
 
 
 class Message:

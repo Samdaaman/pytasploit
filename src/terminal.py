@@ -78,6 +78,7 @@ class App:
             'run_script': {
                 script: get_lambda(self._do_run_script, script) for script in map(lambda path: os.path.split(path)[-1], web_server.get_available_scripts())
             },
+            'self_destruct': self._do_self_destruct,
             'shell': self._do_open_shell_bash
         }
         commands = {
@@ -133,11 +134,14 @@ class App:
         start = time.perf_counter()
         while time.perf_counter() - start < 3:
             sleep(0.1)
-            if os.system(f'netstat -lant | grep 0.0.0.0:{port}') == 0:
+            if subprocess.call(f'netstat -lant | grep 0.0.0.0:{port}', shell=True, stdout=subprocess.DEVNULL) == 0:
                 self.selected_instance.messages_to_send.put(Message(MESSAGE_PURPOSE.OPEN_SHELL, [str(port).encode()]))
                 return
         else:
             logger.warn(f"pwncat didn't start within 3 secs :(")
+
+    def _do_self_destruct(self):
+        self.selected_instance.messages_to_send.put(Message(MESSAGE_PURPOSE.SELF_DESTRUCT))
 
     def _do_open_shell_bash(self):
         port = get_open_port()

@@ -32,6 +32,13 @@ def get_by_id(instance_id: str) -> Optional[Instance]:
                 return instance
 
 
+def remove_instance(instance):
+    with _lock:
+        if instance in _instances:
+            _instances.remove(instance)
+            on_instances_update(tuple(_instances), instance)
+
+
 def ping_instances_forever(blocking=False):
     ping_delay = 3
 

