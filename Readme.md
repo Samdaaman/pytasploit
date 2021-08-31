@@ -1,4 +1,8 @@
 # Readme
+## TODO
+- AED module which can revive pyterpreter from a separate process
+
+
 ### Compiling pyterpreter into single file:  
 `pinliner pyterpreter -o pyterpreter.py`
 

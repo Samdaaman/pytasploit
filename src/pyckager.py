@@ -1,7 +1,7 @@
+import sys
 from base64 import b64encode
 import os
-from typing import Dict, Tuple
-
+from typing import Dict, Tuple, List
 
 packages_source_dict: Dict[str, Tuple[bool, str]] = {}
 
@@ -41,25 +41,36 @@ def process_file(base_dir: str, package_path: str):
         packages_source_dict[path] = (is_package_init, code)
 
 
-def main():
-    for package_path in ['src/pyterpreter', 'src/core']:
+def process_packages(package_paths: List[str], log=False) -> str:
+    default_package = os.path.split(package_paths[0])[1]  # default package is the first package
+    for package_path in package_paths:
         base_dir, module_name = os.path.split(package_path)
         process_directory(base_dir, module_name)
 
     packages_encoded_lines = []
     for package_name, (is_package_init, package_source) in packages_source_dict.items():
-        print(f'processing {package_name} ({len(package_source)})')
+        if log:
+            print(f'Processing {package_name} ({len(package_source)})')
         packages_encoded_lines.append(f"        '{package_name}': ({is_package_init}, '{b64encode(package_source.encode()).decode()}'),")
     packages_encoded_str = '\n'.join(packages_encoded_lines)
 
     with open('pyckager_template.py') as fh:
         template = fh.read()
 
-    template = template.replace('<DEFAULT_PACKAGE_NAME_INSERTED_HERE>', 'pyterpreter')
+    template = template.replace('<DEFAULT_PACKAGE_NAME_INSERTED_HERE>', default_package)
     template = template.replace('        # <PACKAGES_INSERTED_HERE>', packages_encoded_str)
+    return template
+
+
+def main():
+    package_paths = sys.argv[1:]
+    if len(package_paths) == 0:
+        print('Please specify package paths: eg "pyckager src/package1 src/package2"\nWith the package to be imported automatically first')
+        exit(-1)
+    output = process_packages(package_paths, True)
 
     with open('pyckager_out.py', 'w') as fh:
-        fh.write(template)
+        fh.write(output)
 
 
 if __name__ == '__main__':

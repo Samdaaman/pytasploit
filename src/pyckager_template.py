@@ -43,6 +43,9 @@ class FinderAndLoader(importlib.abc.MetaPathFinder, importlib.abc.Loader):
                 module.__package__ = full_package_name.rsplit('.', 1)[0]
                 module.__file__ = path + '.py'
 
+            if globals().get('__source__') is not None:
+                module.__source__ = globals()['__source__']  # allow __source__ global to be passed down to modules
+
             sys.modules[full_package_name] = module
 
             compiled_code = compile(code, module.__file__, 'exec')
@@ -53,7 +56,7 @@ class FinderAndLoader(importlib.abc.MetaPathFinder, importlib.abc.Loader):
             raise ImportError(f'Error loading {full_package_name} with custom loader: {ex}')
 
 
-def prepare_package():
+def main():
     packages: Dict[str, Tuple[bool, str]] = {
         # <PACKAGES_INSERTED_HERE>
     }
@@ -67,16 +70,16 @@ def prepare_package():
 
     # Compile and run the default packages code
     default_package_code = packages[DEFAULT_PACKAGE_NAME][1]
-    print(f'Running default package code\n{default_package_code}')
     default_package_init_filename = DEFAULT_PACKAGE_NAME + '/__init__.py'
     compiled_code = compile(default_package_code, default_package_init_filename, 'exec')
     new_globals = {
         '__file__': default_package_init_filename,
-        '__name__': __name__,
+        '__name__': '__main__',
         '__loader__': finder_and_loader,
     }
+    if globals().get('__source__') is not None:
+        new_globals['__source__'] = globals()['__source__']  # allow __source__ global to be passed down to modules
     exec(compiled_code, new_globals)
 
 
-if __name__ == '__main__':
-    prepare_package()
+main()
