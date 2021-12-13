@@ -7,6 +7,11 @@ import time
 from core.message import Message
 
 from pyterpreter import config
+from pyterpreter.my_logging import Logger
+
+
+logger = Logger('ROOT')
+
 
 config.messages_to_send = SimpleQueue()
 config.messages_received = SimpleQueue()
@@ -46,7 +51,7 @@ def initialise():
     create_instance()
     Thread(target=receive_messages_forever, daemon=True).start()
     Thread(target=send_messages_forever, daemon=True).start()
-    print('Communication initialised')
+    logger.log('Communication initialised')
 
 
 def create_instance():
@@ -54,4 +59,4 @@ def create_instance():
     instance_id = create_instance_res.read().decode()
     assert instance_id is not None and len(instance_id) > 0
     config.INSTANCE_ID = instance_id
-    print(f'Instance created at {instance_id}')
+    logger.log(f'Instance created at {instance_id}')

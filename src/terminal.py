@@ -124,8 +124,9 @@ class App:
     def _do_set_selected_instance(self, instance_id: str):
         self.selected_instance = instance_manager.get_by_id(instance_id)
 
-    def _do_run_script(self, script):
-        self.selected_instance.messages_to_send.put(Message(MESSAGE_PURPOSE.RUN_SCRIPT, script))
+    def _do_run_script(self, script: str):
+        logger.warn('not implemented')
+        # self.selected_instance.messages_to_send.put(Message(MESSAGE_PURPOSE.RUN_SCRIPT, script.encode()))
 
     def _do_pwncat(self):
         port = get_open_port()
