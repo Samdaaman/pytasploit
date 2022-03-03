@@ -1,6 +1,6 @@
 from threading import Thread
 
-from core.message import Message, MESSAGE_PURPOSE
+from core.message import *
 
 import config
 from instance import Instance
@@ -13,7 +13,7 @@ def process_new_messages_forever(blocking=False):
         while True:
             instance, message = config.all_messages_received.get()  # type: Instance, Message
 
-            if message.purpose == MESSAGE_PURPOSE.PING:
+            if isinstance(message, PingResponse):
                 continue
 
             # TODO

@@ -1,3 +1,4 @@
+import json
 import urllib.error
 import urllib.request
 from queue import SimpleQueue
@@ -39,14 +40,14 @@ def initialise():
                     raise ex
 
             else:
-                data = poll_messages.read().decode()
-                if len(data) > 0:
-                    config.messages_received.put(Message.from_string(data))
+                messages_encoded = json.loads(poll_messages.read().decode())
+                for message_encoded in messages_encoded:
+                    config.messages_received.put(Message.decode(message_encoded))
 
     def send_messages_forever():
         while True:
             message = config.messages_to_send.get()
-            urllib.request.urlopen(urllib.request.Request(f'{_base_url}/instances/{config.INSTANCE_ID}', message.to_string().encode(), {'Content-Type': 'text/plain'}))
+            urllib.request.urlopen(urllib.request.Request(f'{_base_url}/instances/{config.INSTANCE_ID}', message.encode().encode(), {'Content-Type': 'text/plain'}))
 
     create_instance()
     Thread(target=receive_messages_forever, daemon=True).start()

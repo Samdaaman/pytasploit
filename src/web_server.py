@@ -1,3 +1,5 @@
+import json
+
 from flask import Flask, send_from_directory, redirect, request
 import pyckager
 from threading import Thread
@@ -67,7 +69,7 @@ def messaging(instance_id):
     if instance is None:
         return 'Not Found', 404
     if request.method == 'POST':
-        message = Message.from_string(request.data.decode())
+        message = Message.decode(request.data.decode())
         instance.messages_received_put(message)
         return ''
     else:
@@ -77,7 +79,7 @@ def messaging(instance_id):
             messages.append(message)
         except Empty:
             pass
-        return '\n'.join([message.to_string() for message in messages])
+        return json.dumps([message.encode() for message in messages])
 
 
 def start(blocking=False):
