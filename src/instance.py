@@ -29,5 +29,8 @@ class Instance:
     def __str__(self):
         return f'{self.username}@{self.instance_id}'
 
+    def execute_command(self, name: str, params: dict) -> dict:
+        pass
+
 
 

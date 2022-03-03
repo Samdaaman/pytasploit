@@ -4,8 +4,9 @@ import subprocess
 import sys
 
 from pyterpreter import config
+from pyterpreter import command_processor
 from pyterpreter import communication
-from pyterpreter import request_handler
+from pyterpreter import message_processor
 from pyterpreter import pacemaker
 from pyterpreter.my_logging import Logger
 
@@ -39,4 +40,5 @@ def run():
 
         pacemaker.start()
         communication.initialise()
-        request_handler.process_requests_forever()
+        command_processor.process_commands_forever()
+        message_processor.process_messages_forever(blocking=True)

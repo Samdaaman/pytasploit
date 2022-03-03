@@ -4,6 +4,7 @@ from threading import Lock, Thread
 import time
 from typing import Callable, List, Optional, Tuple
 
+from core.command import CommandTypes, CommandRequest
 from core.message import *
 
 from instance import Instance
@@ -52,7 +53,8 @@ def ping_instances_forever(blocking=False):
                     _instances.remove(instance)
                     on_instances_update(tuple(_instances), instance)
                 else:
-                    instance.messages_to_send.put(PingRequest())
+                    message = Message(MessageTypes.COMMAND_REQUEST, CommandRequest(CommandTypes.PING).to_json())
+                    instance.messages_to_send.put(message)
 
         time.sleep(ping_delay)
 

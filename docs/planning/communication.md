@@ -5,10 +5,10 @@ Things that do something immediately (or within 3 sec) and return success or fai
 ### Requests
 ```json5
 {
-  "type": "command_request",   // identifies that this is a command message
+  "message_type": "COMMAND_REQUEST",
   "data": {
     "uid": "abc1234",          // unique string which identifies the command_request
-    "type": "<command_type>",  // type of the command (eg "PING")  
+    "command_type": "<command_type>",  // type of the command (eg "PING")  
     "params": {
       // JSON object of command parameters (if any)
     }
@@ -19,21 +19,38 @@ Things that do something immediately (or within 3 sec) and return success or fai
 ### Responses
 ```json5
 {
-  "type": "command_response",  // identifies that this is a command message
+  "message_type": "COMMAND_RESPONSE",
   "data": {
     "request_uid": "abc1234",  // same uid from the command_request
-    "params": {
+    "returns": {
       // JSON object of command return values (if any)
     }
   },
 }
 ```
 
+### Error Responses
+```json5
+{
+  "message_type": "COMMAND_RESPONSE_ERROR",
+  "data": {
+    "request_uid": "abc1234",  // same uid from the command_request
+    "error": "dang something"  // string to identify error
+  }
+}
+```
+
 ## List of Commands
 ### Ping
+```yaml
 params: none  
-returns: generic success
+returns: {}
+```
 
-### OpenReverseShell
-params: none  
-returns generic success  
+### Open Reverse Shell
+```yaml
+params: 
+  - port: int
+returns: {} 
+```
+

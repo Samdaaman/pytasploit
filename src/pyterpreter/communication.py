@@ -16,6 +16,7 @@ logger = Logger('ROOT')
 
 config.messages_to_send = SimpleQueue()
 config.messages_received = SimpleQueue()
+config.commands_to_process = SimpleQueue()
 
 _base_url = f'http://{config.LOCAL_IP}:{config.WEBSERVER_PORT}'
 

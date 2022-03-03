@@ -3,6 +3,7 @@ from queue import Queue
 import os
 from typing import Optional
 
+from core.command import CommandRequest
 from core.message import Message
 
 LOCAL_IP = os.environ['PYTERPRETER_LOCAL_IP']
@@ -19,3 +20,4 @@ pacemaker_pid: Optional[int] = None
 self_destructing = False
 messages_to_send: 'Queue[Message]' = None
 messages_received: 'Queue[Message]' = None
+commands_to_process: 'Queue[CommandRequest]' = None
