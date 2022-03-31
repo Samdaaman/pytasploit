@@ -3,6 +3,7 @@
 - Easy to add commands / processes / modules
 - Minimal filesystem presence
 - Extendable to multiple communication protocols (ie TCP/IP, HTTP, DNS exfiltration)
+   - Ideally this includes the staged deployment mechanism (could use pastebin idea)
 - Support for old python3 versions (3.5 ideally)
 - Modules loadable at runtime and reloadable
 
@@ -17,10 +18,9 @@
 - Known password bruteforce of existing users
 
 ## Commands
-- TODO Ping/pong
-- TODO Open shell
-- TODO Self destruct
-- TODO Spawn reverse shell
+- Ping/pong
+- Open shell
+- Self destruct
 - TODO Run enum script
 - TODO Custom enum script / modules
   - Enum files  

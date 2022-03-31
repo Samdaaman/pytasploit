@@ -144,8 +144,8 @@ class App:
             logger.warn(f"pwncat didn't start within 3 secs :(")
 
     def _do_self_destruct(self):
-        # self.selected_instance.messages_to_send.put(SelfDestructRequest())
-        raise NotImplementedError()
+        message = Message(MessageTypes.COMMAND_REQUEST, CommandRequest(CommandTypes.SELF_DESTRUCT).to_json())
+        self.selected_instance.messages_to_send.put(message)
 
     def _do_open_shell_bash(self):
         port = get_open_port()

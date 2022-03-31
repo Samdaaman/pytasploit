@@ -1,10 +1,18 @@
+import os
+import signal
 import subprocess
+import sys
+import threading
+import time
 from threading import Thread
 
 from core.command import CommandResponse, CommandResponseError, CommandTypes
 from core.message import Message, MessageTypes
 
 from pyterpreter import config
+from pyterpreter.my_logging import Logger
+
+logger = Logger('PACEMAKER')
 
 
 def process_commands_forever(blocking=False):
@@ -16,6 +24,7 @@ def process_commands_forever(blocking=False):
                 returns = _process_command(command_request.command_type, command_request.params)
             except Exception as ex:
                 exception_str = "{}: {}".format(ex.__class__.__name__, str(ex))
+                logger.log(f'Error occurred: {exception_str}')
                 message = Message(MessageTypes.COMMAND_RESPONSE_ERROR, CommandResponseError(command_request.uid, exception_str).to_json())
             else:
                 message = Message(MessageTypes.COMMAND_RESPONSE, CommandResponse(command_request.uid, returns).to_json())
@@ -26,6 +35,8 @@ def process_commands_forever(blocking=False):
 
 
 def _process_command(command_type: str, params: dict) -> dict:
+    logger.log(f'Received {command_type} command: {params}')
+
     if command_type == CommandTypes.PING:
         return {}
 
@@ -36,6 +47,12 @@ def _process_command(command_type: str, params: dict) -> dict:
 
     elif command_type == CommandTypes.GO_STEALTHY:
         raise NotImplementedError()
+
+    elif command_type == CommandTypes.SELF_DESTRUCT:
+        config.self_destructing = True
+        os.kill(config.pacemaker_pid, signal.SIGKILL)
+        logger.log('Exiting')
+        os.kill(os.getpid(), signal.SIGTERM)
 
     else:
         raise Exception("Command '{}' not implemented".format(command_type))
