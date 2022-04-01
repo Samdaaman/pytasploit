@@ -1,10 +1,7 @@
 from queue import SimpleQueue
 import time
-from typing import Tuple
 
 from core.message import Message
-
-import config
 
 
 class Instance:
@@ -18,10 +15,6 @@ class Instance:
         self.username = username
         self.last_message_received = time.perf_counter()
         self.messages_to_send = SimpleQueue()
-
-    def messages_received_put(self, message: Message) -> None:
-        self.last_message_received = time.perf_counter()
-        config.all_messages_received.put((self, message))
 
     def is_root(self):
         return self.username == 'root'

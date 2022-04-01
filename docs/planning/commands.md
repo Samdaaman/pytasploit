@@ -54,3 +54,16 @@ params:
 returns: none
 ```
 
+### Self Destruct
+```yaml
+params: none
+returns: none
+```
+
+### Run file
+```yaml
+params:
+  - contents_b64: string
+returns:
+  - pid: int
+```

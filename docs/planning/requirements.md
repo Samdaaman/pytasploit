@@ -21,7 +21,7 @@
 - Ping/pong
 - Open shell
 - Self destruct
-- TODO Run enum script
+- Run enum script
 - TODO Custom enum script / modules
   - Enum files  
   - Enum services / open ports and compare
