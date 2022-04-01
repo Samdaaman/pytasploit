@@ -1,4 +1,5 @@
 import json
+import time
 
 from flask import Flask, send_from_directory, redirect, request
 
@@ -72,6 +73,7 @@ def messaging(instance_id):
         return 'Not Found', 404
     if request.method == 'POST':
         message = Message.decode(request.data.decode())
+        instance.last_message_received = time.perf_counter()
         config.all_messages_received.put((instance, message))
         return ''
     else:

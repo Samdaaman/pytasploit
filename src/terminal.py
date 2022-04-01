@@ -78,7 +78,10 @@ class App:
         }
         instance_commands = {
             'pwncat': self._do_pwncat,
-            'linpeas': get_lambda(self._do_run_file, 'linpeas.sh'),
+            'run': {
+                'linpeas': get_lambda(self._do_run_file, 'linpeas.sh'),
+                'linenum': get_lambda(self._do_run_file, 'linenum.sh'),
+            },
             'self_destruct': self._do_self_destruct,
             'shell': self._do_open_shell_bash
         }
