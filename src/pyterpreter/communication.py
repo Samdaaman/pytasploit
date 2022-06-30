@@ -1,7 +1,7 @@
 import json
 import urllib.error
 import urllib.request
-from queue import Queue, SimpleQueue
+from queue import Queue
 from threading import Thread
 import time
 
@@ -14,7 +14,7 @@ from pyterpreter.my_logging import Logger
 logger = Logger('ROOT')
 
 
-config.messages_to_send = SimpleQueue()
+config.messages_to_send = Queue()
 config.messages_received = Queue()
 config.commands_to_process = Queue()
 
