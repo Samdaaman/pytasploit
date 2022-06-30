@@ -8,7 +8,7 @@ from core.message import Message
 
 LOCAL_IP = os.environ['PYTERPRETER_LOCAL_IP']
 INSTANCE_ID: str = None
-SOURCE_CODE: str = globals()['__source__']
+SOURCE_CODE: str = globals().get('__source__')
 HAS_STEALTH_PROCESS_NAME = os.environ.get('PYTERPRETER_HAS_STEALTH_PROCESS_NAME', False) is not False
 USERNAME = pwd.getpwuid(os.getuid()).pw_name
 WEBSERVER_PORT = 1337
