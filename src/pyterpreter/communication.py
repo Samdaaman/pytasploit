@@ -1,7 +1,7 @@
 import json
 import urllib.error
 import urllib.request
-from queue import SimpleQueue
+from queue import Queue, SimpleQueue
 from threading import Thread
 import time
 
@@ -15,8 +15,8 @@ logger = Logger('ROOT')
 
 
 config.messages_to_send = SimpleQueue()
-config.messages_received = SimpleQueue()
-config.commands_to_process = SimpleQueue()
+config.messages_received = Queue()
+config.commands_to_process = Queue()
 
 _base_url = f'http://{config.LOCAL_IP}:{config.WEBSERVER_PORT}'
 
