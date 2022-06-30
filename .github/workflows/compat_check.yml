@@ -1,0 +1,17 @@
+name: Compatibility Check (python3.6+)
+
+on:
+  push:
+    branches: [ "main", "dev" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build the compat_check Docker image
+      run: docker build -t compat_check -f compat_check.Dockerfile .
+      
+    - name: Run the compat_check Docker image
+      run: docker run -it compat_check
