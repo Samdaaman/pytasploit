@@ -14,4 +14,4 @@ jobs:
       run: docker build -t compat_check -f compat_check.Dockerfile .
       
     - name: Run the compat_check Docker image
-      run: docker run -it compat_check
+      run: docker run -t compat_check
